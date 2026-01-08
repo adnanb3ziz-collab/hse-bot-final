@@ -3,50 +3,49 @@ import google.generativeai as genai
 from PIL import Image
 
 # إعداد الصفحة
-st.set_page_config(page_title="HSE AI Free", page_icon="🛡️")
+st.set_page_config(page_title="HSE AI Assistant", page_icon="🤖")
 
-st.title("🛡️ خبير السلامة (النسخة المجانية)")
-st.caption("يعمل بموديل Gemini 2.0 Experimental (بدون قيود)")
+st.title("🤖 المساعد الذكي HSE (متصل بـ Gemini)")
+st.write("هذا النظام متصل مباشرة بمحرك Gemini 1.5 Flash السريع والمجاني.")
 
-# إدخال المفتاح
-api_key = st.sidebar.text_input("🔑 Google API Key", type="password")
+# 1. بلاصة الساروت (الكابل ديال الربط)
+api_key = st.text_input("لصق الساروت (API Key) هنا:", type="password")
 
-# رفع الصورة
-uploaded_file = st.file_uploader("ارفع صورة الورشة", type=['jpg', 'png', 'jpeg'])
+# 2. رفع الصورة
+uploaded_file = st.file_uploader("ارفع صورة الورشة لتحليل المخاطر", type=['jpg', 'png', 'jpeg'])
 
-if uploaded_file:
-    image = Image.open(uploaded_file)
-    st.image(image, caption="الصورة جاهزة", use_container_width=True)
+if uploaded_file and api_key:
+    # تهيئة الاتصال
+    genai.configure(api_key=api_key)
     
-    if api_key:
-        genai.configure(api_key=api_key)
-        
-        if st.button("🚀 تحليل فوري"):
-            with st.spinner("جاري التحليل..."):
-                try:
-                    # هنا التغيير: اخترنا الموديل التجريبي المجاني من لائحتك
-                    model = genai.GenerativeModel('models/gemini-2.0-flash-exp')
-                    
-                    prompt = """
-                    Role: HSE Auditor. 
-                    Output Language: Arabic.
-                    Task: Identify safety hazards and cite ISO 45001.
-                    Structure:
-                    1. 🚨 المخاطر.
-                    2. ⚖️ القانون/ISO.
-                    3. ✅ الحل.
-                    """
-                    
-                    response = model.generate_content([prompt, image])
-                    st.markdown(response.text)
-                    st.success("✅ تم التحليل بنجاح (وضع مجاني)")
-                    
-                except Exception as e:
-                    # إذا فشل، نجرب الموديل الخفيف جداً كاحتياط
-                    try:
-                        model = genai.GenerativeModel('models/gemini-2.0-flash-lite-001')
-                        response = model.generate_content([prompt, image])
-                        st.markdown(response.text)
-                    except:
-                        st.error("⚠️ يبدو أن السيرفر مشغول جداً، حاول مرة أخرى بعد دقيقة.")
-                        
+    # عرض الصورة
+    image = Image.open(uploaded_file)
+    st.image(image, caption="الصورة جاهزة للإرسال", use_container_width=True)
+    
+    # زر التحليل
+    if st.button("🚀 أرسل الصورة إلى Gemini"):
+        with st.spinner("جاري الاتصال بـ Gemini وتحليل الصورة..."):
+            try:
+                # هنا يتم الاتصال بي مباشرة (النسخة 1.5 Flash)
+                model = genai.GenerativeModel('gemini-1.5-flash')
+                
+                # الرسالة التي سأتوصل بها
+                prompt = """
+                الدور: خبير في الصحة والسلامة المهنية (HSE).
+                المهمة: استخراج المخاطر من الصورة واقتراح حلول حسب معايير ISO 45001.
+                اللغة: العربية.
+                التنسيق: نقاط واضحة ومختصرة.
+                """
+                
+                # إرسال الطلب واستقبال الجواب
+                response = model.generate_content([prompt, image])
+                
+                # عرض الجواب
+                st.success("✅ تم استلام الرد من Gemini:")
+                st.markdown(response.text)
+                
+            except Exception as e:
+                st.error("حدث خطأ في الاتصال:")
+                st.warning(f"السبب: {e}")
+                st.info("تأكد أن الساروت (API Key) منسوخ بشكل صحيح.")
+                
