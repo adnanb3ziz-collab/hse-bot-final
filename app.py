@@ -3,53 +3,50 @@ import google.generativeai as genai
 from PIL import Image
 
 # إعداد الصفحة
-st.set_page_config(page_title="HSE AI Expert", page_icon="🛡️")
+st.set_page_config(page_title="HSE AI Free", page_icon="🛡️")
 
-# العنوان
-st.title("🛡️ خبير السلامة المهنية (AI Auditor)")
-st.caption("يعمل بمحرك Gemini 2.0 Flash (الجيل الجديد)")
+st.title("🛡️ خبير السلامة (النسخة المجانية)")
+st.caption("يعمل بموديل Gemini 2.0 Experimental (بدون قيود)")
 
-# القائمة الجانبية للمفتاح
+# إدخال المفتاح
 api_key = st.sidebar.text_input("🔑 Google API Key", type="password")
 
 # رفع الصورة
-uploaded_file = st.file_uploader("ارفع صورة الورشة أو الخطر", type=['jpg', 'png', 'jpeg'])
+uploaded_file = st.file_uploader("ارفع صورة الورشة", type=['jpg', 'png', 'jpeg'])
 
 if uploaded_file:
-    # عرض الصورة
     image = Image.open(uploaded_file)
-    st.image(image, caption="الصورة قيد الفحص...", use_container_width=True)
+    st.image(image, caption="الصورة جاهزة", use_container_width=True)
     
     if api_key:
         genai.configure(api_key=api_key)
         
-        if st.button("🚀 ابدأ التحليل (Start Audit)"):
-            with st.spinner("جاري تحليل المخاطر بأحدث تقنيات الذكاء الاصطناعي..."):
+        if st.button("🚀 تحليل فوري"):
+            with st.spinner("جاري التحليل..."):
                 try:
-                    # هنا التغيير الحاسم: استخدمنا الموديل اللي لقينا فاللائحة ديالك
-                    model = genai.GenerativeModel('models/gemini-2.0-flash')
+                    # هنا التغيير: اخترنا الموديل التجريبي المجاني من لائحتك
+                    model = genai.GenerativeModel('models/gemini-2.0-flash-exp')
                     
-                    # التعليمات للخبير
                     prompt = """
-                    Role: Senior HSE Auditor (ISO 45001 & Moroccan Labor Code).
-                    Task: Analyze the image for safety hazards.
-                    Language: Arabic (with technical terms).
-                    
-                    Report Structure:
-                    1. 🚨 **المخاطر المرصودة**: (List hazards).
-                    2. ⚖️ **المخالفة القانونية**: (Cite ISO 45001 clause or NM 00.5.801).
-                    3. ✅ **الحل المقترح**: (Immediate action).
-                    4. 🔥 **مستوى الخطورة**: (High/Medium/Low).
+                    Role: HSE Auditor. 
+                    Output Language: Arabic.
+                    Task: Identify safety hazards and cite ISO 45001.
+                    Structure:
+                    1. 🚨 المخاطر.
+                    2. ⚖️ القانون/ISO.
+                    3. ✅ الحل.
                     """
                     
-                    # الحصول على النتيجة
                     response = model.generate_content([prompt, image])
                     st.markdown(response.text)
-                    st.success("✅ تم التحليل بنجاح باستخدام Gemini 2.0")
+                    st.success("✅ تم التحليل بنجاح (وضع مجاني)")
                     
                 except Exception as e:
-                    st.error(f"حدث خطأ: {e}")
-                    st.info("جرب موديل آخر من القائمة إذا استمر المشكل.")
-    else:
-        st.warning("⚠️ المرجو إدخال كود API في القائمة الجانبية للبدء.")
-        
+                    # إذا فشل، نجرب الموديل الخفيف جداً كاحتياط
+                    try:
+                        model = genai.GenerativeModel('models/gemini-2.0-flash-lite-001')
+                        response = model.generate_content([prompt, image])
+                        st.markdown(response.text)
+                    except:
+                        st.error("⚠️ يبدو أن السيرفر مشغول جداً، حاول مرة أخرى بعد دقيقة.")
+                        
