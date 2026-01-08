@@ -1,41 +1,55 @@
 import streamlit as st
 import google.generativeai as genai
+from PIL import Image
 
-st.title("🛠️ فحص الموديلات (System Check)")
+# إعداد الصفحة
+st.set_page_config(page_title="HSE AI Expert", page_icon="🛡️")
 
-# 1. عرض نسخة المكتبة (باش نعرفو واش المشكل فالتحديث)
-try:
-    ver = genai.__version__
-    st.info(f"📚 نسخة المكتبة المثبتة: {ver}")
-    # إذا كانت أقل من 0.4.0 راه ماغاديش تخدم Gemini
-except:
-    st.error("❌ لا يمكن تحديد نسخة المكتبة!")
+# العنوان
+st.title("🛡️ خبير السلامة المهنية (AI Auditor)")
+st.caption("يعمل بمحرك Gemini 2.0 Flash (الجيل الجديد)")
 
-# 2. إدخال المفتاح
-api_key = st.text_input("🔑 دخل الساروت (API Key) باش نشوفو اللائحة:", type="password")
+# القائمة الجانبية للمفتاح
+api_key = st.sidebar.text_input("🔑 Google API Key", type="password")
 
-if api_key:
-    genai.configure(api_key=api_key)
+# رفع الصورة
+uploaded_file = st.file_uploader("ارفع صورة الورشة أو الخطر", type=['jpg', 'png', 'jpeg'])
+
+if uploaded_file:
+    # عرض الصورة
+    image = Image.open(uploaded_file)
+    st.image(image, caption="الصورة قيد الفحص...", use_container_width=True)
     
-    if st.button("📋 اعرض اللائحة (Call ListModels)"):
-        st.write("جاري الاتصال بسيرفر Google...")
-        try:
-            # هادي هي الدالة اللي طلب منك الميساج ديرها
-            models = genai.list_models()
-            
-            found_any = False
-            st.write("### الموديلات المتوفرة لحسابك:")
-            
-            for m in models:
-                # قلب ليا غير على الموديلات اللي كتولد المحتوى
-                if 'generateContent' in m.supported_generation_methods:
-                    st.success(f"✅ الموديل: `{m.name}`")
-                    found_any = True
-            
-            if not found_any:
-                st.warning("⚠️ الساروت خدام، ولكن ما لقينا حتا موديل متوافق!")
-                
-        except Exception as e:
-            st.error(f"❌ حدث خطأ أثناء جلب اللائحة: {e}")
-            st.warning("تأكد أن الساروت صحيح وأنك مفعل Generative Language API فالموقع.")
-            
+    if api_key:
+        genai.configure(api_key=api_key)
+        
+        if st.button("🚀 ابدأ التحليل (Start Audit)"):
+            with st.spinner("جاري تحليل المخاطر بأحدث تقنيات الذكاء الاصطناعي..."):
+                try:
+                    # هنا التغيير الحاسم: استخدمنا الموديل اللي لقينا فاللائحة ديالك
+                    model = genai.GenerativeModel('models/gemini-2.0-flash')
+                    
+                    # التعليمات للخبير
+                    prompt = """
+                    Role: Senior HSE Auditor (ISO 45001 & Moroccan Labor Code).
+                    Task: Analyze the image for safety hazards.
+                    Language: Arabic (with technical terms).
+                    
+                    Report Structure:
+                    1. 🚨 **المخاطر المرصودة**: (List hazards).
+                    2. ⚖️ **المخالفة القانونية**: (Cite ISO 45001 clause or NM 00.5.801).
+                    3. ✅ **الحل المقترح**: (Immediate action).
+                    4. 🔥 **مستوى الخطورة**: (High/Medium/Low).
+                    """
+                    
+                    # الحصول على النتيجة
+                    response = model.generate_content([prompt, image])
+                    st.markdown(response.text)
+                    st.success("✅ تم التحليل بنجاح باستخدام Gemini 2.0")
+                    
+                except Exception as e:
+                    st.error(f"حدث خطأ: {e}")
+                    st.info("جرب موديل آخر من القائمة إذا استمر المشكل.")
+    else:
+        st.warning("⚠️ المرجو إدخال كود API في القائمة الجانبية للبدء.")
+        
