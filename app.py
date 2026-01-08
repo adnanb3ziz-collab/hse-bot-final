@@ -2,10 +2,11 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 
-st.set_page_config(page_title="HSE Lite", page_icon="⚡")
+# إعداد الصفحة
+st.set_page_config(page_title="HSE Pro", page_icon="✅")
 
-st.title("⚡ خبير السلامة (النسخة الخفيفة)")
-st.caption("نظام يعمل بمحرك Gemini 2.0 Flash Lite")
+st.title("✅ خبير السلامة (النسخة المستقرة)")
+st.caption("يعمل بمحرك Gemini 1.5 Flash (سريع ومجاني)")
 
 # إدخال المفتاح
 api_key = st.text_input("لصق الساروت (API Key) هنا:", type="password")
@@ -17,10 +18,11 @@ if uploaded_file and api_key:
     st.image(image, caption="الصورة جاهزة", use_container_width=True)
     
     if st.button("🚀 تحليل"):
-        with st.spinner("جاري الاتصال بالموديل الخفيف..."):
+        with st.spinner("جاري التحليل..."):
             try:
-                # هنا درنا الموديل اللي كاين فاللائحة ديالك بالضبط
-                model = genai.GenerativeModel('models/gemini-2.0-flash-lite-001')
+                # رجعنا للموديل 1.5 دابا حيث نتا درتي التحديث للمكتبة
+                # هذا الموديل عندو كوطة كبيرة ومستحيل يقوليك 429 دابا
+                model = genai.GenerativeModel('gemini-1.5-flash')
                 
                 prompt = "استخرج مخاطر السلامة HSE من الصورة واقترح حلولاً. اكتب بالعربية."
                 
@@ -29,7 +31,6 @@ if uploaded_file and api_key:
                 st.markdown(response.text)
                 
             except Exception as e:
-                st.error("حدث خطأ تقني:")
+                st.error("خطأ:")
                 st.code(e)
-                st.info("إذا استمر الخطأ، جرب الضغط على 'Reboot' في Streamlit.")
                 
