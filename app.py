@@ -2,50 +2,34 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 
-# إعداد الصفحة
-st.set_page_config(page_title="HSE AI Assistant", page_icon="🤖")
+st.set_page_config(page_title="HSE Lite", page_icon="⚡")
 
-st.title("🤖 المساعد الذكي HSE (متصل بـ Gemini)")
-st.write("هذا النظام متصل مباشرة بمحرك Gemini 1.5 Flash السريع والمجاني.")
+st.title("⚡ خبير السلامة (النسخة الخفيفة)")
+st.caption("نظام يعمل بمحرك Gemini 2.0 Flash Lite")
 
-# 1. بلاصة الساروت (الكابل ديال الربط)
+# إدخال المفتاح
 api_key = st.text_input("لصق الساروت (API Key) هنا:", type="password")
-
-# 2. رفع الصورة
-uploaded_file = st.file_uploader("ارفع صورة الورشة لتحليل المخاطر", type=['jpg', 'png', 'jpeg'])
+uploaded_file = st.file_uploader("ارفع الصورة", type=['jpg', 'png', 'jpeg'])
 
 if uploaded_file and api_key:
-    # تهيئة الاتصال
     genai.configure(api_key=api_key)
-    
-    # عرض الصورة
     image = Image.open(uploaded_file)
-    st.image(image, caption="الصورة جاهزة للإرسال", use_container_width=True)
+    st.image(image, caption="الصورة جاهزة", use_container_width=True)
     
-    # زر التحليل
-    if st.button("🚀 أرسل الصورة إلى Gemini"):
-        with st.spinner("جاري الاتصال بـ Gemini وتحليل الصورة..."):
+    if st.button("🚀 تحليل"):
+        with st.spinner("جاري الاتصال بالموديل الخفيف..."):
             try:
-                # هنا يتم الاتصال بي مباشرة (النسخة 1.5 Flash)
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                # هنا درنا الموديل اللي كاين فاللائحة ديالك بالضبط
+                model = genai.GenerativeModel('models/gemini-2.0-flash-lite-001')
                 
-                # الرسالة التي سأتوصل بها
-                prompt = """
-                الدور: خبير في الصحة والسلامة المهنية (HSE).
-                المهمة: استخراج المخاطر من الصورة واقتراح حلول حسب معايير ISO 45001.
-                اللغة: العربية.
-                التنسيق: نقاط واضحة ومختصرة.
-                """
+                prompt = "استخرج مخاطر السلامة HSE من الصورة واقترح حلولاً. اكتب بالعربية."
                 
-                # إرسال الطلب واستقبال الجواب
                 response = model.generate_content([prompt, image])
-                
-                # عرض الجواب
-                st.success("✅ تم استلام الرد من Gemini:")
+                st.success("✅ تم التحليل بنجاح!")
                 st.markdown(response.text)
                 
             except Exception as e:
-                st.error("حدث خطأ في الاتصال:")
-                st.warning(f"السبب: {e}")
-                st.info("تأكد أن الساروت (API Key) منسوخ بشكل صحيح.")
+                st.error("حدث خطأ تقني:")
+                st.code(e)
+                st.info("إذا استمر الخطأ، جرب الضغط على 'Reboot' في Streamlit.")
                 
