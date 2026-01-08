@@ -1,49 +1,41 @@
 import streamlit as st
 import google.generativeai as genai
-from PIL import Image
 
-st.set_page_config(page_title="HSE Final Bot", page_icon="🛡️")
+st.title("🛠️ فحص الموديلات (System Check)")
 
-st.header("🛡️ نظام تحليل المخاطر (النسخة النهائية)")
+# 1. عرض نسخة المكتبة (باش نعرفو واش المشكل فالتحديث)
+try:
+    ver = genai.__version__
+    st.info(f"📚 نسخة المكتبة المثبتة: {ver}")
+    # إذا كانت أقل من 0.4.0 راه ماغاديش تخدم Gemini
+except:
+    st.error("❌ لا يمكن تحديد نسخة المكتبة!")
 
-# 1. إدخال المفتاح
-api_key = st.text_input("نسخ ولصق كود Google API Key هنا:", type="password")
+# 2. إدخال المفتاح
+api_key = st.text_input("🔑 دخل الساروت (API Key) باش نشوفو اللائحة:", type="password")
 
-# 2. رفع الصورة
-uploaded_file = st.file_uploader("اختر صورة", type=['jpg', 'png', 'jpeg'])
-
-if uploaded_file and api_key:
-    # إظهار الصورة
-    image = Image.open(uploaded_file)
-    st.image(image, caption="الصورة جاهزة", use_container_width=True)
-    
-    # تهيئة Google
+if api_key:
     genai.configure(api_key=api_key)
     
-    if st.button("🚀 تحليل نهائي"):
-        with st.spinner("جاري الاتصال..."):
-            status_box = st.empty()
+    if st.button("📋 اعرض اللائحة (Call ListModels)"):
+        st.write("جاري الاتصال بسيرفر Google...")
+        try:
+            # هادي هي الدالة اللي طلب منك الميساج ديرها
+            models = genai.list_models()
             
-            # المحاولة 1: الموديل السريع
-            try:
-                status_box.text("جاري تجربة الموديل السريع (Flash)...")
-                model = genai.GenerativeModel('gemini-1.5-flash')
-                response = model.generate_content(["استخرج مخاطر السلامة من الصورة (ISO 45001) بالعربية.", image])
-                st.success("✅ تم التحليل بنجاح (Flash)!")
-                st.markdown(response.text)
+            found_any = False
+            st.write("### الموديلات المتوفرة لحسابك:")
+            
+            for m in models:
+                # قلب ليا غير على الموديلات اللي كتولد المحتوى
+                if 'generateContent' in m.supported_generation_methods:
+                    st.success(f"✅ الموديل: `{m.name}`")
+                    found_any = True
+            
+            if not found_any:
+                st.warning("⚠️ الساروت خدام، ولكن ما لقينا حتا موديل متوافق!")
                 
-            except Exception as e_flash:
-                # المحاولة 2: الموديل القديم (احتياطي)
-                try:
-                    status_box.text("الموديل الأول فشل، جاري تجربة الموديل الاحتياطي (Pro Vision)...")
-                    model = genai.GenerativeModel('gemini-pro-vision')
-                    response = model.generate_content(["Analyze safety hazards in Arabic", image])
-                    st.success("✅ تم التحليل بنجاح (Legacy Mode)!")
-                    st.markdown(response.text)
-                    
-                except Exception as e_final:
-                    # إذا فشل كل شيء
-                    st.error("❌ فشلت جميع المحاولات. الخطأ هو:")
-                    st.code(f"Error 1: {e_flash}\nError 2: {e_final}")
-                    st.warning("تأكد أن المفتاح (API Key) صالح وأنك قمت بتفعيله في Google AI Studio.")
-                    
+        except Exception as e:
+            st.error(f"❌ حدث خطأ أثناء جلب اللائحة: {e}")
+            st.warning("تأكد أن الساروت صحيح وأنك مفعل Generative Language API فالموقع.")
+            
